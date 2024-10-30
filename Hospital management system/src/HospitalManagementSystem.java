@@ -6,7 +6,7 @@ import java.util.Scanner;
 public class HospitalManagementSystem {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        AppointmentManager appointmentManager = new AppointmentManager();
+        AppointmentManager appointmentManager = AppointmentManager.getInstance();
 
         // Adding sample doctors
         Doctor doctor1 = new Doctor("D001", "Dr. John Smith");
@@ -46,14 +46,14 @@ public class HospitalManagementSystem {
             if (currentUser != null && currentUser.login(userId, password)) {
                 System.out.println("Login successful. Welcome, " + currentUser.name + "!");
                 boolean loggedIn = true;
-                while (loggedIn) {
-                    currentUser.displayMenu();
-                    System.out.print("Enter your choice: ");
-                    int choice = scanner.nextInt();
-                    scanner.nextLine(); // Consume newline
+                while (loggedIn) {// Consume newline
 
                     switch (currentUser) {
                         case Patient patient -> {
+                            currentUser.displayMenu();
+                            System.out.print("Enter your choice: ");
+                            int choice = scanner.nextInt();
+                            scanner.nextLine();
                             switch (choice) {
                                 case 1:
                                     patient.viewMedicalRecord();
@@ -75,7 +75,7 @@ public class HospitalManagementSystem {
                                         Date date = new Date(); // Simplified for demonstration
                                         System.out.print("Enter time slot: ");
                                         String timeSlot = scanner.nextLine();
-                                        patient.scheduleAppointment(date, timeSlot, doctor);
+                                        patient.scheduleAppointment(date, timeSlot, doctorId);
                                     } else {
                                         System.out.println("Invalid Doctor ID.");
                                     }
@@ -104,6 +104,10 @@ public class HospitalManagementSystem {
                             }
                         }
                         case Doctor doctor -> {
+                            currentUser.displayMenu();
+                            System.out.print("Enter your choice: ");
+                            int choice = scanner.nextInt();
+                            scanner.nextLine();
                             switch (choice) {
                                 case 1:
                                     System.out.print("Enter Patient ID to view record: ");
@@ -131,10 +135,10 @@ public class HospitalManagementSystem {
                                         System.out.println("Invalid Patient ID.");
                                     }
                                     break;
-                                case 3:
+                                case 5:
                                     System.out.print("Enter Appointment ID to accept: ");
                                     String appointmentId = scanner.nextLine();
-                                    Appointment appointment = appointmentManager.getAppointment(appointmentId);
+                                    Appointment appointment = appointmentManager.getAppointmentById(appointmentId);
                                     if (appointment != null) {
                                         System.out.print("Enter 1 to accept, 0 to decline: ");
                                         int acceptDecline = scanner.nextInt();
@@ -152,13 +156,12 @@ public class HospitalManagementSystem {
 
 
                                 case 4:
-                                    doctor.viewUpcomingAppointments();
                                     break;
 
-                                case 5:
+                                case 7:
                                     System.out.print("Enter Appointment ID to record outcome: ");
                                     appointmentId = scanner.nextLine();
-                                    appointment = appointmentManager.getAppointment(appointmentId);
+                                    appointment = appointmentManager.getAppointmentById(appointmentId);
                                     if (appointment != null) {
                                         System.out.print("Enter type of service: ");
                                         String typeOfService = scanner.nextLine();
@@ -179,7 +182,7 @@ public class HospitalManagementSystem {
                                     }
                                     break;
                                 case 6:
-                                    doctor.viewUpcomingAppointments();
+                                    AppointmentManager.getAppointmentsForDoctor(userId);
                                     break;
                                 case 9:
                                     loggedIn = false;
@@ -191,6 +194,10 @@ public class HospitalManagementSystem {
                             }
                         }
                         case Pharmacist pharmacist -> {
+                            currentUser.displayMenu();
+                            System.out.print("Enter your choice: ");
+                            int choice = scanner.nextInt();
+                            scanner.nextLine();
                             switch (choice) {
                                 case 1:
                                     System.out.print("Enter Appointment Outcome ID: ");
@@ -227,6 +234,10 @@ public class HospitalManagementSystem {
                             }
                         }
                         case Administrator adminUser -> {
+                            currentUser.displayMenu();
+                            System.out.print("Enter your choice: ");
+                            int choice = scanner.nextInt();
+                            scanner.nextLine();
                             switch (choice) {
                                 case 1:
                                     System.out.print("Enter staff ID: ");

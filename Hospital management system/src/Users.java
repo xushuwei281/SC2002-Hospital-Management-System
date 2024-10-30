@@ -28,15 +28,23 @@ abstract class User {
         System.out.println("Password changed successfully.");
     }
 
+    public String getId(){
+        return id;
+    }
+
+    public String getName(){
+        return name;
+    }
+
     public abstract void displayMenu();
 }
 
 // Patient Class
 class Patient extends User {
     private String contactInfo;
-    private String bloodType;
+    private final String bloodType;
     ArrayList<String> pastDiagnoses;
-    private AppointmentManager appointmentManager;
+    private final AppointmentManager appointmentManager;
 
     public Patient(String id, String name, String contactInfo, String bloodType, AppointmentManager appointmentManager) {
         super(id, name);
@@ -98,10 +106,10 @@ class Patient extends User {
 
 // Doctor Class
 class Doctor extends User {
-    private ArrayList<String> patientList;
-    private ArrayList<String> notifications;
-    private ArrayList<Appointment> upcomingAppointments;
-    private ArrayList<AppointmentOutcome> appointmentOutcomes;
+    private final ArrayList<String> patientList;
+    private final ArrayList<String> notifications;
+    private final ArrayList<Appointment> upcomingAppointments;
+    private final ArrayList<AppointmentOutcome> appointmentOutcomes;
 
     public Doctor(String id, String name) {
         super(id, name);
@@ -147,26 +155,6 @@ class Doctor extends User {
         System.out.println("Appointment declined: " + appointment.getAppointmentId());
     }
 
-    public void viewMyAppointments() {
-        List<Appointment> appointments = AppointmentManager.getInstance().getAppointmentsForDoctor(this.id);
-        for (Appointment appointment : appointments) {
-            System.out.println("Appointment ID: " + appointment.getAppointmentId() +
-                    ", Patient: " + appointment.getPatientId() +
-                    ", Date: " + appointment.getAppointmentDate() +
-                    ", Time Slot: " + appointment.getTimeSlot());
-        }
-    }
-
-    public void addDiagnosis(String appointmentId, String diagnosis, ArrayList<PrescribedMedication> prescribedMedications) {
-        Appointment appointment = AppointmentManager.getInstance().getAppointmentsForDoctor(this.id);
-        if (appointment != null && appointment.getDoctorId().equals(this.id)) {
-            // Add logic to add diagnosis and prescriptions
-            System.out.println("Diagnosis added for Appointment ID: " + appointmentId);
-        } else {
-            System.out.println("Access Denied or Appointment not found.");
-        }
-    }
-
 
     public void recordAppointmentOutcome(Appointment appointment, String typeOfService, ArrayList<PrescribedMedication> prescribedMedications, String consultationNotes) {
         AppointmentOutcome outcome = new AppointmentOutcome(appointment.getAppointmentDate(), typeOfService, prescribedMedications, consultationNotes);
@@ -188,10 +176,10 @@ class Doctor extends User {
 }
 
 class AppointmentOutcome {
-    private Date appointmentDate;
-    private String typeOfService;
-    private ArrayList<PrescribedMedication> prescribedMedications;
-    private String consultationNotes;
+    private final Date appointmentDate;
+    private final String typeOfService;
+    private final ArrayList<PrescribedMedication> prescribedMedications;
+    private final String consultationNotes;
 
     public AppointmentOutcome(Date appointmentDate, String typeOfService, ArrayList<PrescribedMedication> prescribedMedications, String consultationNotes) {
         this.appointmentDate = appointmentDate;
@@ -206,7 +194,7 @@ class AppointmentOutcome {
 }
 
 class PrescribedMedication {
-    private String medicationName;
+    private final String medicationName;
     private String status;
 
     public PrescribedMedication(String medicationName) {
@@ -231,7 +219,7 @@ class PrescribedMedication {
 
 // Pharmacist Class
 class Pharmacist extends User {
-    private ArrayList<String> notifications;
+    private final ArrayList<String> notifications;
 
     public Pharmacist(String id, String name) {
         super(id, name);
@@ -304,7 +292,7 @@ class Pharmacist extends User {
 
 // Administrator Class
 class Administrator extends User {
-    private HashMap<String, User> hospitalStaff;
+    public HashMap<String, User> hospitalStaff;
 
     public Administrator(String id, String name) {
         super(id, name);
