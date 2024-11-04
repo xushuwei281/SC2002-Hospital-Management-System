@@ -62,6 +62,7 @@ class Patient extends User {
         System.out.println("Past Diagnoses: " + pastDiagnoses);
     }
 
+
     public void updateContactInfo(String newContactInfo) {
         this.contactInfo = newContactInfo;
         System.out.println("Contact information updated successfully.");
@@ -75,10 +76,9 @@ class Patient extends User {
                     ", Time Slot: " + appointment.getTimeSlot());
         }
     }
-
     public void scheduleAppointment(Date date, String timeSlot, String doctorId) {
         Appointment appointment = new Appointment("A" + System.currentTimeMillis(), id, doctorId, date, timeSlot);
-        AppointmentManager.getInstance().scheduleAppointment(appointment);
+        AppointmentManager.getInstance().scheduleAppointment(appointment, doctorId);
     }
 
 
@@ -110,6 +110,7 @@ class Doctor extends User {
     private final ArrayList<String> notifications;
     private final ArrayList<Appointment> upcomingAppointments;
     private final ArrayList<AppointmentOutcome> appointmentOutcomes;
+    private Set<String> availableTimeslots;
 
     public Doctor(String id, String name) {
         super(id, name);
@@ -117,7 +118,9 @@ class Doctor extends User {
         this.notifications = new ArrayList<>();
         this.upcomingAppointments = new ArrayList<>();
         this.appointmentOutcomes = new ArrayList<>();
+        this.availableTimeslots = generateAvailableTimeslots();
     }
+
 
     public void viewPatientRecord(Patient patient) {
         patient.viewMedicalRecord();
@@ -144,6 +147,21 @@ class Doctor extends User {
         }
     }
 
+    private Set<String> generateAvailableTimeslots() {
+        Set<String> timeslots = new HashSet<>();
+        String[] morningSlots = {"09:00", "09:30", "10:00", "10:30", "11:00", "11:30"};
+        String[] afternoonSlots = {"14:00", "14:30", "15:00", "15:30", "16:00", "16:30"};
+        timeslots.addAll(Arrays.asList(morningSlots));
+        timeslots.addAll(Arrays.asList(afternoonSlots));
+        return timeslots;
+    }
+
+
+    public Set<String> getAvailableTimeslots() { return new HashSet<>(availableTimeslots); }
+    public void setAvailableTimeSlots(Set<String> availableTimeSlots) { this.availableTimeslots = availableTimeSlots; }
+
+
+
     public void acceptAppointment(Appointment appointment) {
         appointment.setStatus("accepted");
         upcomingAppointments.add(appointment);
@@ -156,11 +174,26 @@ class Doctor extends User {
     }
 
 
-    public void recordAppointmentOutcome(Appointment appointment, String typeOfService, ArrayList<PrescribedMedication> prescribedMedications, String consultationNotes) {
-        AppointmentOutcome outcome = new AppointmentOutcome(appointment.getAppointmentDate(), typeOfService, prescribedMedications, consultationNotes);
-        appointmentOutcomes.add(outcome);
-        System.out.println("Appointment outcome recorded successfully.");
+    public void recordAppointmentOutcome(String appointmentId, String typeOfService, ArrayList<PrescribedMedication> prescribedMedications, String consultationNotes) {
+        Appointment appointment = AppointmentManager.getInstance().getAppointmentById(appointmentId);
+        if (appointment != null && "confirmed".equals(appointment.getStatus())) {
+            AppointmentOutcome outcome = new AppointmentOutcome(appointmentId, typeOfService, prescribedMedications, consultationNotes);
+            appointmentOutcomes.add(outcome);
+            System.out.println("Appointment outcome recorded successfully for appointment ID: " + appointmentId);
+        } else {
+            System.out.println("No confirmed appointment found with the given ID.");
+        }
     }
+
+    public AppointmentOutcome getOutcomeById(String appointmentId) {
+        for (AppointmentOutcome outcome : appointmentOutcomes) {
+            if (outcome.appointmentId.equals(appointmentId)) {
+                return outcome;
+            }
+        }
+        return null;  // Return null if no outcome found
+    }
+
 
     @Override
     public void displayMenu() {
@@ -176,26 +209,27 @@ class Doctor extends User {
 }
 
 class AppointmentOutcome {
-    private final Date appointmentDate;
-    private final String typeOfService;
-    private final ArrayList<PrescribedMedication> prescribedMedications;
-    private final String consultationNotes;
+    public String appointmentId;
+    public String typeOfService;
+    public static ArrayList<PrescribedMedication> prescribedMedications;
+    public String consultationNotes;
 
-    public AppointmentOutcome(Date appointmentDate, String typeOfService, ArrayList<PrescribedMedication> prescribedMedications, String consultationNotes) {
-        this.appointmentDate = appointmentDate;
+    public AppointmentOutcome(String appointmentId, String typeOfService, ArrayList<PrescribedMedication> prescribedMedications, String consultationNotes) {
+        this.appointmentId = appointmentId;
         this.typeOfService = typeOfService;
         this.prescribedMedications = prescribedMedications;
         this.consultationNotes = consultationNotes;
     }
 
-    public ArrayList<PrescribedMedication> getPrescribedMedications() {
+    public static ArrayList<PrescribedMedication> getPrescribedMedications() {
         return prescribedMedications;
     }
+
 }
 
 class PrescribedMedication {
-    private final String medicationName;
-    private String status;
+    public String medicationName;
+    public String status;
 
     public PrescribedMedication(String medicationName) {
         this.medicationName = medicationName;
@@ -221,34 +255,75 @@ class PrescribedMedication {
 class Pharmacist extends User {
     private final ArrayList<String> notifications;
 
+
     public Pharmacist(String id, String name) {
         super(id, name);
         this.notifications = new ArrayList<>();
     }
 
-    public void viewAppointmentOutcome(AppointmentOutcome outcome) {
-        System.out.println("Appointment Outcome:");
-        System.out.println("Type of Service: " + outcome.getPrescribedMedications());
-        for (PrescribedMedication medication : outcome.getPrescribedMedications()) {
-            System.out.println("Medication: " + medication.getMedicationName() + ", Status: " + medication.getStatus());
+
+    // Method to display appointment details
+    public void showAppointmentDetails(String appointmentId) {
+        Appointment appointment = AppointmentManager.getInstance().getAppointmentById(appointmentId);
+        if (appointment != null) {
+            System.out.println("Appointment Details:");
+            System.out.println("Appointment ID: " + appointment.getAppointmentId());
+            System.out.println("Patient ID: " + appointment.getPatientId());
+            System.out.println("Doctor ID: " + appointment.getDoctorId());
+            System.out.println("Date: " + appointment.getAppointmentDate());
+            System.out.println("Time Slot: " + appointment.getTimeSlot());
+            System.out.println("Status: " + appointment.getStatus());
+        } else {
+            System.out.println("No appointment found with the given ID.");
+        }
+    }
+
+    public void viewAppointmentOutcomeByAppointmentId(String appointmentId) {
+        Appointment appointment = AppointmentManager.getInstance().getAppointmentById(appointmentId);
+        if (appointment != null) {
+            String doctorId = appointment.getDoctorId();  // Get the doctor ID from the appointment
+            Doctor doctor = AppointmentManager.getInstance().getDoctorById(doctorId);
+
+            if (doctor != null) {
+                AppointmentOutcome outcome = doctor.getOutcomeById(appointmentId);
+                if (outcome != null) {
+                    System.out.println("Appointment Outcome Details:");
+                    System.out.println("Type of Service: " + outcome.typeOfService);
+                    System.out.println("Consultation Notes: " + outcome.consultationNotes);
+                    System.out.println("Prescribed Medications:");
+                    for (PrescribedMedication medication : outcome.getPrescribedMedications()) {
+                        System.out.println("Medication: " + medication.getMedicationName() + ", Status: " + medication.getStatus());
+                    }
+                } else {
+                    System.out.println("No outcome found for the provided appointment ID.");
+                }
+            } else {
+                System.out.println("Doctor not found for the given appointment ID.");
+            }
+        } else {
+            System.out.println("No appointment found with the given ID.");
         }
     }
 
     public void updatePrescriptionStatus(String appointmentId, String medicationName, String newStatus, AppointmentManager appointmentManager) {
-        Appointment appointment = (Appointment) appointmentManager.getAllAppointments();
-        if (appointment != null) {
-            ArrayList<PrescribedMedication> medications = new ArrayList<>();
-            for (PrescribedMedication medication : medications) {
-                if (medication.getMedicationName().equals(medicationName)) {
-                    medication.setStatus(newStatus);
-                    System.out.println("Prescription status updated successfully for " + medication.getMedicationName() + " to " + newStatus);
-                    return;
+        List<Appointment> appointments = appointmentManager.getAllAppointments(); // Assume this returns a List of appointments.
+        for (Appointment appointment : appointments) {
+            if (appointment.getAppointmentId().equals(appointmentId)) {
+                ArrayList<PrescribedMedication> medications = AppointmentOutcome.getPrescribedMedications();
+                for (PrescribedMedication medication : medications) {
+                    if (medication.getMedicationName().equals(medicationName)) {
+                        medication.setStatus(newStatus);
+                        System.out.println("Prescription status updated successfully for " + medication.getMedicationName() + " to " + newStatus);
+                        return;
+                    }
+                    else{
+                        System.out.println("Medication not found in the appointment.");
+                        return;
+                    }
                 }
             }
-            System.out.println("Medication not found in the appointment.");
-        } else {
-            System.out.println("Appointment not found.");
         }
+        System.out.println("Appointment not found.");
     }
 
     public void viewMedicationInventory() {

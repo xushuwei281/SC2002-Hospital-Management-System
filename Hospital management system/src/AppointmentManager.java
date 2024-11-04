@@ -1,5 +1,6 @@
 import java.util.*;
 
+
 // AppointmentManager Class
 public class AppointmentManager {
     private static AppointmentManager instance = null;
@@ -23,20 +24,42 @@ public class AppointmentManager {
         return instance;
     }
 
-    // Set available time slots from another class
-    public void setAvailableTimeSlots(Set<String> availableTimeSlots) {
-        this.availableTimeSlots = availableTimeSlots;
-    }
 
     // Set hospital staff map from another class
     public void setHospitalStaff(Map<String, User> hospitalStaff) {
         this.hospitalStaff = hospitalStaff;
     }
 
-    public void scheduleAppointment(Appointment appointment) {
-        appointments.put(appointment.getAppointmentId(), appointment);
-        availableTimeSlots.remove(appointment.getTimeSlot());  // Update available time slots
-        System.out.println("Appointment scheduled successfully: " + appointment.getAppointmentId());
+    public Doctor getDoctorById(String doctorId) {
+        User user = hospitalStaff.get(doctorId);
+        return (user instanceof Doctor) ? (Doctor) user : null;
+    }
+
+    // Display available timeslots for a specific doctor
+    public void showAvailableTimeslots(String doctorId) {
+        Doctor doctor = getDoctorById(doctorId);
+        if (doctor != null) {
+            Set<String> availableSlots = doctor.getAvailableTimeslots();
+            if (availableSlots.isEmpty()) {
+                System.out.println("No available timeslots for Dr. " + doctor.getName());
+            } else {
+                System.out.println("Available timeslots for Dr. " + doctor.getName() + ":");
+                availableSlots.forEach(System.out::println);
+            }
+        } else {
+            System.out.println("Doctor not found. Please check the Doctor ID and try again.");
+        }
+    }
+
+
+    public void scheduleAppointment(Appointment appointment,String doctorId) {
+        if (getDoctorById(doctorId).getAvailableTimeslots().contains(appointment.getTimeSlot())) {
+            appointments.put(appointment.getAppointmentId(), appointment);
+            availableTimeSlots.remove(appointment.getTimeSlot());  // Remove booked slot
+            System.out.println("Appointment scheduled successfully: " + appointment.getAppointmentId());
+        } else {
+            System.out.println("The selected time slot is not available.");
+        }
     }
 
     public void rescheduleAppointment(String appointmentId, Date newDate, String newTimeSlot) {
@@ -110,7 +133,6 @@ public class AppointmentManager {
     public Appointment getAppointmentById(String appointmentId) {
         return appointments.get(appointmentId);
     }
-
 
     public List<Appointment> getAllAppointments() {
         return new ArrayList<>(appointments.values());

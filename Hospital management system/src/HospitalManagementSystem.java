@@ -1,6 +1,12 @@
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
 
 // Main Driver Class
 public class HospitalManagementSystem {
@@ -64,36 +70,77 @@ public class HospitalManagementSystem {
                                     patient.updateContactInfo(newContactInfo);
                                     break;
                                 case 3:
-                                    System.out.println("Available Appointment Slots: " + appointmentManager.availableTimeSlots);
+                                    Scanner scanner3 = new Scanner(System.in);
+                                    System.out.println("Enter the Doctor's ID to view available appointment slots: ");
+                                    String doctorId = scanner.nextLine();
+                                    appointmentManager.showAvailableTimeslots(doctorId);
                                     break;
                                 case 4:
                                     System.out.print("Enter Doctor ID: ");
-                                    String doctorId = scanner.nextLine();
-                                    Doctor doctor = (Doctor) appointmentManager.hospitalStaff.get(doctorId);
+                                    String doctorId4 = scanner.nextLine();
+                                    Doctor doctor = appointmentManager.getDoctorById(doctorId4);
                                     if (doctor != null) {
-                                        System.out.print("Enter appointment date (yyyy-MM-dd): ");
-                                        Date date = new Date(); // Simplified for demonstration
-                                        System.out.print("Enter time slot: ");
-                                        String timeSlot = scanner.nextLine();
-                                        patient.scheduleAppointment(date, timeSlot, doctorId);
+                                        System.out.println("Enter appointment date (yyyy-MM-dd): ");
+                                        String dateString = scanner.nextLine();
+                                        Date appointmentDate;
+
+                                        try {
+                                            // Parse and validate date input
+                                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                                            dateFormat.setLenient(false); // Ensure strict parsing
+                                            appointmentDate = dateFormat.parse(dateString);
+
+                                            // Check if the date is not in the past
+                                            if (appointmentDate.before(new Date())) {
+                                                System.out.println("The date entered is in the past. Please enter a valid future date.");
+                                                break;
+                                            }
+
+                                            System.out.print("Enter time slot: ");
+                                            String timeSlot = scanner.nextLine();
+                                            patient.scheduleAppointment(appointmentDate, timeSlot, doctorId4);
+                                        } catch (ParseException e) {
+                                            System.out.println("Invalid date format. Please enter the date in yyyy-MM-dd format.");
+                                        }
                                     } else {
                                         System.out.println("Invalid Doctor ID.");
                                     }
                                     break;
+
                                 case 5:
                                     System.out.print("Enter Appointment ID to reschedule: ");
                                     String appointmentId = scanner.nextLine();
                                     System.out.print("Enter new date (yyyy-MM-dd): ");
-                                    Date newDate = new Date(); // Simplified for demonstration
-                                    System.out.print("Enter new time slot: ");
-                                    String newTimeSlot = scanner.nextLine();
-                                    patient.rescheduleAppointment(appointmentId, newDate, newTimeSlot);
+                                    String newDateString = scanner.nextLine();
+                                    Date newDate;
+
+                                    try {
+                                        // Parse and validate new date input
+                                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                                        dateFormat.setLenient(false); // Ensure strict parsing
+                                        newDate = dateFormat.parse(newDateString);
+
+                                        // Check if the new date is valid and not in the past
+                                        if (newDate.before(new Date())) {
+                                            System.out.println("The date entered is in the past. Please enter a valid future date.");
+                                            break;
+                                        }
+
+                                        System.out.print("Enter new time slot: ");
+                                        String newTimeSlot = scanner.nextLine();
+                                        patient.rescheduleAppointment(appointmentId, newDate, newTimeSlot);
+                                    } catch (ParseException e) {
+                                        System.out.println("Invalid date format. Please enter the date in yyyy-MM-dd format.");
+                                    }
                                     break;
+
                                 case 6:
                                     System.out.print("Enter Appointment ID to cancel: ");
                                     String cancelAppointmentId = scanner.nextLine();
                                     patient.cancelAppointment(cancelAppointmentId);
                                     break;
+                                case 7:
+                                    patient.viewMyAppointments();
                                 case 9:
                                     loggedIn = false;
                                     System.out.println("Logging out...");
@@ -135,6 +182,12 @@ public class HospitalManagementSystem {
                                         System.out.println("Invalid Patient ID.");
                                     }
                                     break;
+
+                                case 3:
+                                    doctor.getAvailableTimeslots();
+                                    break;
+
+
                                 case 5:
                                     System.out.print("Enter Appointment ID to accept: ");
                                     String appointmentId = scanner.nextLine();
@@ -155,9 +208,6 @@ public class HospitalManagementSystem {
                                     break;
 
 
-                                case 4:
-                                    break;
-
                                 case 7:
                                     System.out.print("Enter Appointment ID to record outcome: ");
                                     appointmentId = scanner.nextLine();
@@ -176,7 +226,7 @@ public class HospitalManagementSystem {
                                         }
                                         System.out.print("Enter consultation notes: ");
                                         String consultationNotes = scanner.nextLine();
-                                        doctor.recordAppointmentOutcome(appointment, typeOfService, prescribedMedications, consultationNotes);
+                                        doctor.recordAppointmentOutcome(appointmentId, typeOfService, prescribedMedications, consultationNotes);
                                     } else {
                                         System.out.println("Invalid Appointment ID.");
                                     }
@@ -184,7 +234,7 @@ public class HospitalManagementSystem {
                                 case 6:
                                     AppointmentManager.getAppointmentsForDoctor(userId);
                                     break;
-                                case 9:
+                                case 8:
                                     loggedIn = false;
                                     System.out.println("Logging out...");
                                     break;
@@ -202,8 +252,8 @@ public class HospitalManagementSystem {
                                 case 1:
                                     System.out.print("Enter Appointment Outcome ID: ");
                                     String appointmentOutcomeId = scanner.nextLine();
-                                    AppointmentOutcome outcome = new AppointmentOutcome(new Date(), "General Checkup", new ArrayList<>(), "All good"); // Example outcome
-                                    pharmacist.viewAppointmentOutcome(outcome);
+                                    pharmacist.showAppointmentDetails(appointmentOutcomeId);
+                                    pharmacist.viewAppointmentOutcomeByAppointmentId(appointmentOutcomeId);
                                     break;
 
                                 case 2:
