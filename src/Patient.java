@@ -1,6 +1,7 @@
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 // Patient Class
 public class Patient extends User {
@@ -11,7 +12,7 @@ public class Patient extends User {
     public ArrayList<String> pastDiagnoses;
     public ArrayList<String> TreatmentPlan;
     public ArrayList<String> Prescription = new ArrayList<>();
-    private final AppointmentManager appointmentManager;
+    public AppointmentManager appointmentManager;
 
     
 
@@ -39,38 +40,33 @@ public class Patient extends User {
         System.out.println("TreatmentPlan: " + TreatmentPlan);
     }
 
-    public void viewMyInfo() {
-        System.out.println("Patient ID: " + id);
-        System.out.println("Name: " + name);
-        System.out.println("Gender: " + gender);
-        System.out.println("Date of Birth: " + dob);
-        System.out.println("Contact Info: " + contactInfo);
-        System.out.println("Blood Type: " + bloodType);
-    }
-
-
-
     public void updateContactInfo(String newContactInfo) {
         this.contactInfo = newContactInfo;
         System.out.println("Contact information updated successfully.");
     }
+
     public void viewMyAppointments() {
         List<Appointment> appointments = AppointmentManager.getInstance().getAppointmentsForPatient(this.id);
         for (Appointment appointment : appointments) {
             System.out.println("Appointment ID: " + appointment.getAppointmentId() +
                     ", Doctor: " + appointment.getDoctorId() +
-                    ", Date: " + appointment.getAppointmentDate() +
-                    ", Time Slot: " + appointment.getTimeSlot());
+                    ", Date: " + appointment.getFormattedApptDate() +
+                    ", Time Slot: " + appointment.getTimeSlot()+
+                    ", Status:" + appointment.getStatus());
         }
     }
-    public void scheduleAppointment(Date date, String timeSlot, String doctorId) {
+
+    public void viewPastAppointmentOutcomes() {
+        appointmentManager.getPastAppointmentsForPatient(this.id);
+    }
+
+    public void scheduleAppointment(LocalDate date, LocalTime timeSlot, String doctorId) {
         Appointment appointment = new Appointment("A" + System.currentTimeMillis(), id, doctorId, date, timeSlot);
         AppointmentManager.getInstance().scheduleAppointment(appointment, doctorId);
     }
 
-
-    public void rescheduleAppointment(String appointmentId, Date newDate, String newTimeSlot) {
-        appointmentManager.rescheduleAppointment(appointmentId, newDate, newTimeSlot);
+    public void rescheduleAppointment(String appointmentId, LocalDate date, LocalTime timeSlot) {
+        appointmentManager.rescheduleAppointment(appointmentId, date, timeSlot);
     }
 
     public void cancelAppointment(String appointmentId) {
