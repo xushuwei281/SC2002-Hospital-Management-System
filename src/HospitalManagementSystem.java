@@ -74,25 +74,13 @@ public class  HospitalManagementSystem {
             PrescribedMedication medication = new PrescribedMedication(medicationName, initialStock, lowStockAlert);
             CommonInventory.inventory.put(medicationName, medication);
 
-            // Log the addition
-            System.out.println("Added medication: " + medicationName +
-                    " with initial stock: " + initialStock +
-                    " and low stock alert level: " + lowStockAlert);
-        }
-
-
-        // Optional: Verify inventory contents
-        System.out.println("Current Inventory:");
-        for (Map.Entry<String, PrescribedMedication> entry : CommonInventory.inventory.entrySet()) {
-            System.out.println("Medication: " + entry.getKey() + ", Units: " + entry.getValue().getUnits());
         }
 
         appointmentManager.setDefaultWeeklyAvailabilityForAllDoctors();
 
         boolean system = true;
 
-
-        while (system == true) {
+        while (system) {
             try {
                 System.out.print("Enter User ID: ");
                 String userId = scanner.nextLine();
@@ -505,6 +493,7 @@ public class  HospitalManagementSystem {
                                         System.out.println("Logging out...");
                                         break;
                                     case 9:
+                                        loggedIn = false;
                                         system = false;
                                         break;
 
@@ -553,8 +542,6 @@ public class  HospitalManagementSystem {
         writer.writePharmacistsToExcel("src/Pharma_staff.xlsx", updatedPharmacistsList);
 
         writer.writeMedicationsToExcel("src/Medicine_List.xlsx");
-
-
 
         System.out.println("Program executed successfully. All Updates saved to Excel.");
     }

@@ -70,6 +70,6 @@ public class Administrator extends User {
         System.out.println("6. View and Manage Medication Inventory");
         System.out.println("7. Approve Replenishment Requests");
         System.out.println("8. Logout");
-        System.out.println("8. End System Session");
+        System.out.println("9. End System Session");
     }
 }
