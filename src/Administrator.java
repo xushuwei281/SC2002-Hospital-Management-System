@@ -9,9 +9,9 @@ public class Administrator extends User {
 
     public Administrator(String id, String name, String role, String gender, String age) {
         super(id, name);
-        this.staffManager = new StaffManager();
-        this.appointmentManager = new AppointmentManager();
-        this.replenishRequestManager = new replenishRequestManager();
+        this.staffManager = StaffManager.getInstance();
+        this.appointmentManager = AppointmentManager.getInstance();
+        this.replenishRequestManager = replenishRequestManager.getInstance();
     }
 
     // Function to add hospital staff
@@ -70,5 +70,6 @@ public class Administrator extends User {
         System.out.println("6. View and Manage Medication Inventory");
         System.out.println("7. Approve Replenishment Requests");
         System.out.println("8. Logout");
+        System.out.println("8. End System Session");
     }
 }

@@ -4,9 +4,17 @@ import java.util.Scanner;
 
 public class StaffManager {
     public Map<String, User> hospitalStaff;
+    private static StaffManager instance = null;
 
     public StaffManager() {
         this.hospitalStaff = new java.util.HashMap<>();
+    }
+
+    public static StaffManager getInstance() {
+        if (instance == null) {
+            instance = new StaffManager();
+        }
+        return instance;
     }
 
     public void addStaff(User user) {
@@ -96,10 +104,20 @@ public class StaffManager {
         System.out.println("Staff members with role: " + role);
         for (User user : hospitalStaff.values()) {
             if (role.equalsIgnoreCase("Doctor") && user instanceof Doctor) {
-                System.out.println(user.name);
+                System.out.println(
+                        "Name: " + user.name + ", " +
+                                "ID: " + user.id + ", " +
+                                "Age: " + ((Doctor) user).age + ", " +
+                                "Gender: " + ((Doctor) user).gender
+                );
 
             } else if (role.equalsIgnoreCase("Pharmacist") && user instanceof Pharmacist) {
-                System.out.println(user.name);
+                System.out.println(
+                        "Name: " + user.name + ", " +
+                                "ID: " + user.id + ", " +
+                                "Gender: " + ((Pharmacist) user).gender + ", " +
+                                "Age: " + ((Pharmacist) user).age
+                );
             }
         }
     }

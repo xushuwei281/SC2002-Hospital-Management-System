@@ -123,10 +123,39 @@ public class ExcelReader {
                     for (int j = 0; j < 6; j++) {
                         administratorData[j] = getCellValueAsString(row.getCell(j));
                     }
-                    administratorsData.add( administratorData);
+                    administratorsData.add(administratorData);
                 }
             }
         } catch (IOException e) {}
         return administratorsData;
     }
+
+    public List<String[]> readMedicationsFromExcel(String filePath) {
+        List<String[]> medicationsData = new ArrayList<>();
+        try (FileInputStream file = new FileInputStream(filePath);
+             Workbook workbook = new XSSFWorkbook(file)) {
+
+            Sheet sheet = workbook.getSheet("Sheet1");
+            if (sheet == null) {
+                System.out.println("Sheet 'Sheet1' does not exist.");
+                return medicationsData;
+            }
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) { // Skip the header row (row 0)
+                Row row = sheet.getRow(i);
+                if (row != null) {
+                    String medicationName = getCellValueAsString(row.getCell(0)); // Medication Name in column 0
+                    String initialStockStr = getCellValueAsString(row.getCell(1)); // Initial Stock in column 1
+                    String lowStockAlertStr = getCellValueAsString(row.getCell(2)); // Low Stock Alert in column 2
+                    medicationsData.add(new String[]{medicationName, initialStockStr, lowStockAlertStr});
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("An error occurred while reading medications from the Excel file.");
+        }
+        return medicationsData;
+    }
+
+
 }

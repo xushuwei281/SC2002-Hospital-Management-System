@@ -105,7 +105,7 @@ public class AppointmentManager {
                 // If there are available slots, print them in sorted order
                 if (!availableSlots.isEmpty()) {
                     hasAvailableSlots = true;
-                    System.out.println("\nDr. " + doctorName + " available slots on " + date + ":");
+                    System.out.println("\nDr. " + doctorName + " / Dr Id:"+doctorId+" available slots on " + date + ":");
                     availableSlots.stream()
                             .sorted() // Sort the available slots to ensure order (not really needed if using TreeSet)
                             .forEach(slot -> System.out.println(" - " + slot));
@@ -193,6 +193,28 @@ public class AppointmentManager {
         }
     }
 
+    public void declineAppointment(String appointmentId) {
+        Appointment appointment = appointments.get(appointmentId);
+        if (appointment != null&& !Objects.equals(appointment.getStatus(), "completed")) {
+            String doctorId = appointment.getDoctorId();
+            LocalDate appointmentDate = appointment.getAppointmentDate();
+            LocalTime timeSlot = appointment.getTimeSlot();
+
+            // Set the appointment status to canceled
+            appointment.setStatus("declined");
+
+            // Free the old time slot by adding it back to availability
+            addAvailableTimeslot(doctorId, appointmentDate, timeSlot);
+
+            System.out.println("Appointment declined: " + appointment.getAppointmentId());
+
+        } else if (appointment == null) {
+            System.out.println("Appointment not found.");
+        } else {
+            System.out.println("Appointment cannot be declined, either it's already canceled or completed.");
+        }
+    }
+
 
     public List<Appointment> getAppointmentsForDoctor(String doctorId) {
         List<Appointment> result = new ArrayList<>();
@@ -219,6 +241,17 @@ public class AppointmentManager {
 
     public List<Appointment> getAllAppointments() {
         return new ArrayList<>(appointments.values());
+    }
+
+    public List<Appointment> getAllCompletedAppointments() {
+        List<Appointment> result = new ArrayList<>();
+        for (Appointment appointment : appointments.values()) {
+            if (appointment.getStatus().equals("completed")) {
+                result.add(appointment);
+                System.out.println("Appointment Id: " + appointment.getAppointmentId() + " Date: " + appointment.getFormattedApptDate() + " TimeSlot: " + appointment.getTimeSlot());
+            }
+        }
+        return result;
     }
 
     public List<Appointment> getAppointmentsForPatient(String patientId) {

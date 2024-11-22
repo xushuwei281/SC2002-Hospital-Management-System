@@ -5,8 +5,8 @@ import java.time.LocalTime;
 
 // Patient Class
 public class Patient extends User {
-    private String contactInfo;
-    private final String bloodType;
+    public String contactInfo;
+    public String bloodType;
     public String gender;
     public String dob;
     public ArrayList<String> pastDiagnoses;

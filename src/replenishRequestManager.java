@@ -1,11 +1,20 @@
 import java.util.Date;
+import java.util.*;
 import java.util.Map;
 
 public class replenishRequestManager {
     private Map<String, ReplenishRequest> replenishRequests;
+    private static replenishRequestManager instance = null;
 
     public replenishRequestManager() {
         this.replenishRequests = new java.util.HashMap<>();
+    }
+
+    public static replenishRequestManager getInstance() {
+        if (instance == null) {
+            instance = new replenishRequestManager();
+        }
+        return instance;
     }
 
     public void submitReplenishRequest(String requestId, String pharmacistId, String item, int quantity, Date requestDate) {

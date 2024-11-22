@@ -10,10 +10,10 @@ import java.util.Scanner;
 
 
 // Main Driver Class
-public class HospitalManagementSystem {
+public class  HospitalManagementSystem {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        StaffManager staffManager = new StaffManager();
+        StaffManager staffManager = StaffManager.getInstance();
         AppointmentManager appointmentManager = AppointmentManager.getInstance();
         appointmentManager.setStaffManager(staffManager);
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -25,6 +25,8 @@ public class HospitalManagementSystem {
         List<String[]> patientsData = reader.readPatientsFromExcel("src/Patient_List.xlsx");
         List<String[]> pharmacistsData = reader.readPharmacistsFromExcel("src/Pharma_staff.xlsx");
         List<String[]> administratorsData = reader.readAdministratorsFromExcel("src/Admin_staff.xlsx");
+        List<String[]> medicationsData = reader.readMedicationsFromExcel("src/Medicine_List.xlsx");
+
 
         // Creating Doctor objects
 
@@ -52,16 +54,45 @@ public class HospitalManagementSystem {
             staffManager.hospitalStaff.put(administrator.id, administrator);
         }
 
+        for (String[] data : medicationsData) {
+            String medicationName = data[0];
+
+            // Parse initial stock and low stock alert
+            double initialStockDouble = Double.parseDouble(data[1].trim());
+            double lowStockAlertDouble = Double.parseDouble(data[2].trim());
+
+            // Round to the nearest integer
+            int initialStock = (int) Math.round(initialStockDouble);
+            int lowStockAlert = (int) Math.round(lowStockAlertDouble);
+
+            // Validate negative values
+            if (initialStock < 0 || lowStockAlert < 0) {
+                throw new NumberFormatException("Negative stock value.");
+            }
+
+            // Add medication to inventory
+            PrescribedMedication medication = new PrescribedMedication(medicationName, initialStock, lowStockAlert);
+            CommonInventory.inventory.put(medicationName, medication);
+
+            // Log the addition
+            System.out.println("Added medication: " + medicationName +
+                    " with initial stock: " + initialStock +
+                    " and low stock alert level: " + lowStockAlert);
+        }
 
 
-        // Adding sample medications
-        CommonInventory.addItem("Aspirin", 500);
-        CommonInventory.addItem("Ibuprofen", 500);
+        // Optional: Verify inventory contents
+        System.out.println("Current Inventory:");
+        for (Map.Entry<String, PrescribedMedication> entry : CommonInventory.inventory.entrySet()) {
+            System.out.println("Medication: " + entry.getKey() + ", Units: " + entry.getValue().getUnits());
+        }
 
         appointmentManager.setDefaultWeeklyAvailabilityForAllDoctors();
 
+        boolean system = true;
 
-        while (true) {
+
+        while (system == true) {
             try {
                 System.out.print("Enter User ID: ");
                 String userId = scanner.nextLine();
@@ -71,6 +102,23 @@ public class HospitalManagementSystem {
                 User currentUser = staffManager.hospitalStaff.get(userId);
                 if (currentUser != null && currentUser.login(userId, password)) {
                     System.out.println("Login successful. Welcome, " + currentUser.name + "!");
+                    if (currentUser.isFirstLogin()) {
+                        System.out.println("You need to change your password.");
+                        boolean passwordChanged = false;
+                        while (!passwordChanged) {
+                            System.out.print("Enter new password: ");
+                            String newPassword = scanner.nextLine();
+                            System.out.print("Confirm new password: ");
+                            String confirmPassword = scanner.nextLine();
+
+                            if (newPassword.equals(confirmPassword)) {
+                                currentUser.changePassword(newPassword);
+                                passwordChanged = true;
+                            } else {
+                                System.out.println("Passwords do not match. Please try again.");
+                            }
+                        }
+                    }
                     boolean loggedIn = true;
                     while (loggedIn) {
                         currentUser.displayMenu();
@@ -339,7 +387,9 @@ public class HospitalManagementSystem {
                             case Pharmacist pharmacist -> {
                                 switch (choice) {
                                     case 1:
-                                        System.out.print("Enter Appointment Outcome ID: ");
+                                        System.out.print("All Completed Appointments: ");
+                                        pharmacist.showAllcompletedAppointmentsId();
+                                        System.out.print("Enter Appointment ID to view details: ");
                                         String appointmentOutcomeId = scanner.nextLine();
                                         pharmacist.showAppointmentDetails(appointmentOutcomeId);
                                         pharmacist.viewAppointmentOutcomeByAppointmentId(appointmentOutcomeId);
@@ -454,6 +504,10 @@ public class HospitalManagementSystem {
                                         loggedIn = false;
                                         System.out.println("Logging out...");
                                         break;
+                                    case 9:
+                                        system = false;
+                                        break;
+
                                     default:
                                         System.out.println("Invalid choice. Please try again.");
                                         break;
@@ -471,6 +525,38 @@ public class HospitalManagementSystem {
                 System.out.println("An unexpected error occurred: " + e.getMessage());
             }
         }
+
+        ExcelWriter writer = new ExcelWriter();
+
+        ArrayList<Patient> updatedPatientsList = new ArrayList<>();
+        for (User user : staffManager.hospitalStaff.values()) {
+            if (user instanceof Patient) {
+                updatedPatientsList.add((Patient) user);
+            }
+        }
+        writer.writePatientsToExcel("src/Patient_List.xlsx", updatedPatientsList);
+
+        ArrayList<Doctor> updatedDoctorsList = new ArrayList<>();
+        for (User user : staffManager.hospitalStaff.values()) {
+            if (user instanceof Doctor) {
+                updatedDoctorsList.add((Doctor) user);
+            }
+        }
+        writer.writeDoctorsToExcel("src/Doctor_staff.xlsx", updatedDoctorsList);
+
+        ArrayList<Pharmacist> updatedPharmacistsList = new ArrayList<>();
+        for (User user : staffManager.hospitalStaff.values()) {
+            if (user instanceof Pharmacist) {
+                updatedPharmacistsList.add((Pharmacist) user);
+            }
+        }
+        writer.writePharmacistsToExcel("src/Pharma_staff.xlsx", updatedPharmacistsList);
+
+        writer.writeMedicationsToExcel("src/Medicine_List.xlsx");
+
+
+
+        System.out.println("Program executed successfully. All Updates saved to Excel.");
     }
 
 

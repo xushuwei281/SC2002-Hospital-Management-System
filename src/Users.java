@@ -31,6 +31,10 @@ abstract class User {
         System.out.println("Password changed successfully.");
     }
 
+    public boolean isFirstLogin() {
+        return firstLogin;
+    }
+
     public String getId(){
         return id;
     }
@@ -152,8 +156,7 @@ class Doctor extends User {
     }
 
     public void declineAppointment(Appointment appointment) {
-        appointment.setStatus("declined");
-        System.out.println("Appointment declined: " + appointment.getAppointmentId());
+        appointmentManager.declineAppointment(appointment.getAppointmentId());
     }
 
 
@@ -186,57 +189,15 @@ class AppointmentOutcome {
     }
 
     public static ArrayList<PrescribedMedication> getPrescribedMedications() {
+
         return prescribedMedications;
-    }
-}
-
-class PrescribedMedication {
-    public String medicationName;
-    public int units;
-    public String status;
-
-    public PrescribedMedication(String medicationName,int units) {
-        this.medicationName = medicationName;
-        this.units = units;
-        this.status = "pending";
-    }
-
-    public String getMedicationName() {
-        return this.medicationName;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public int getUnits() {
-        return units;
-    }
-
-    public void setUnits(int units) {
-        if (units < 0) {
-            throw new IllegalArgumentException("Units cannot be negative");
-        }
-        this.units = units;
-
-}
-
-
-
-    @Override
-    public String toString() {
-        return "PrescribedMedication [name=" + medicationName + ", units=" + units + "]";
     }
 }
 
 
 // Pharmacist Class
 class Pharmacist extends User {
-    private final ArrayList<String> notifications;
+
     public AppointmentManager appointmentManager;
     public replenishRequestManager replenishRequestManager;
     public String role;
@@ -249,7 +210,12 @@ class Pharmacist extends User {
         this.role = role;
         this.gender = gender;
         this.age = age;
-        this.notifications = new ArrayList<>();
+        this.appointmentManager = AppointmentManager.getInstance();
+        this.replenishRequestManager = replenishRequestManager.getInstance();
+    }
+
+    public void showAllcompletedAppointmentsId() {
+        appointmentManager.getAllCompletedAppointments();
     }
 
 
@@ -275,24 +241,36 @@ class Pharmacist extends User {
 
     public void updatePrescriptionStatus(String appointmentId, String medicationName, String newStatus, AppointmentManager appointmentManager) {
         List<Appointment> appointments = appointmentManager.getAllAppointments(); // Assume this returns a List of appointments.
+        boolean appointmentFound = false;
+        boolean medicationFound = false;
+
         for (Appointment appointment : appointments) {
             if (appointment.getAppointmentId().equals(appointmentId)) {
+                appointmentFound = true;
                 ArrayList<PrescribedMedication> medications = AppointmentOutcome.getPrescribedMedications();
                 for (PrescribedMedication medication : medications) {
                     if (medication.getMedicationName().equals(medicationName)) {
                         medication.setStatus(newStatus);
                         CommonInventory.removeItem(medicationName, medication.getUnits());
                         System.out.println("Prescription status updated successfully for " + medication.getMedicationName() + " to " + newStatus);
+                        medicationFound = true;
+                        break; // Exit loop once the medication is found and updated
                     }
-                    else{
-                        System.out.println("Medication not found in the appointment.");
-                    }
-                    return;
                 }
+
+                if (!medicationFound) {
+                    System.out.println("Medication not found in the appointment.");
+                }
+
+                break; // Exit loop once the correct appointment is found and processed
             }
         }
-        System.out.println("Appointment not found.");
+
+        if (!appointmentFound) {
+            System.out.println("Appointment not found.");
+        }
     }
+
 
     public void viewMedicationInventory() {
         System.out.println("Medication Inventory:");

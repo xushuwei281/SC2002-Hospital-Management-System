@@ -1,8 +1,10 @@
 import java.util.HashMap;
+import java.util.List;
 
 
 public class CommonInventory {
     public static HashMap<String, PrescribedMedication> inventory = new HashMap<>();
+
 
     // Add or update an item in the inventory with the specified units
     public static void addItem(String medicationName, int count) {
@@ -14,7 +16,7 @@ public class CommonInventory {
             // If the medication already exists, update the count
             PrescribedMedication medication = inventory.get(medicationName);
             medication.setUnits(medication.getUnits() + count);
-            System.out.println(medicationName + "stock has been updated to: " + medication.getUnits() + " units");
+            System.out.println(medicationName + " stock has been updated to: " + medication.getUnits() + " units");
         } else {
             // Otherwise, add a new entry for the medication
             inventory.put(medicationName, new PrescribedMedication(medicationName, count));
@@ -44,8 +46,13 @@ public class CommonInventory {
 
     // Print the entire inventory
     public static void printInventory() {
-        inventory.forEach((item, medication) ->
-                System.out.println(item + ": " + medication.getUnits() + " units"));
+        System.out.println("Current Inventory:");
+        inventory.forEach((item, medication) -> {
+            System.out.println("Medication: " + item +
+                    ", Units: " + medication.getUnits() +
+                    ", Low Stock Alert: " + medication.getLowStockAlert() +
+                    (medication.isLowStock() ? " (Low Stock!)" : ""));
+        });
     }
 }
 
